@@ -24,6 +24,21 @@ enum DeviceStatus {
   DELIVERED
 }
 
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
@@ -55,6 +70,7 @@ model Device {
   owner         User          @relation("DeviceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   assignee      User?         @relation("DeviceAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   logs          DeviceLog[]
+  tickets       Ticket[]
 
   @@map("devices")
 }
@@ -69,5 +85,22 @@ model DeviceLog {
   device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
   @@map("device_logs")
+}
+
+model Ticket {
+  id                String         @id @default(cuid())
+  deviceId          String
+  issueDescription  String
+  status            TicketStatus   @default(OPEN)
+  priority          TicketPriority @default(MEDIUM)
+  estimatedCost     Float?
+  dueDate           DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // Relations
+  device            Device         @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("tickets")
 }
 
