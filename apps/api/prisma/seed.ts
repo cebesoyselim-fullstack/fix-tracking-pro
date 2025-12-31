@@ -1,5 +1,6 @@
 // Set DATABASE_URL before any imports
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'file:./dev.db';
+// Database will be created in apps/api/prisma directory
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'file:./apps/api/prisma/dev.db';
 
 import { PrismaClient } from '../../../node_modules/.prisma/client/client';
 import { Role, DeviceStatus } from '../../../node_modules/.prisma/client/enums';
@@ -16,10 +17,10 @@ async function main() {
 
   // Create Manager
   const manager = await prisma.user.upsert({
-    where: { email: 'manager@fixtracking.com' },
+    where: { email: 'admin@fix.com' },
     update: {},
     create: {
-      email: 'manager@fixtracking.com',
+      email: 'admin@fix.com',
       password: hashedPassword,
       role: Role.MANAGER,
     },
@@ -28,10 +29,10 @@ async function main() {
 
   // Create Technician
   const technician = await prisma.user.upsert({
-    where: { email: 'technician@fixtracking.com' },
+    where: { email: 'tech@fix.com' },
     update: {},
     create: {
-      email: 'technician@fixtracking.com',
+      email: 'tech@fix.com',
       password: hashedPassword,
       role: Role.TECHNICIAN,
     },
@@ -40,10 +41,10 @@ async function main() {
 
   // Create Customer
   const customer = await prisma.user.upsert({
-    where: { email: 'customer@fixtracking.com' },
+    where: { email: 'user@fix.com' },
     update: {},
     create: {
-      email: 'customer@fixtracking.com',
+      email: 'user@fix.com',
       password: hashedPassword,
       role: Role.CUSTOMER,
     },

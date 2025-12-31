@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  TECHNICIAN
+  CUSTOMER
+}
+
+enum DeviceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELIVERED
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String
+  role            Role
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  devices         Device[]  @relation("DeviceOwner")
+  assignedDevices Device[]  @relation("DeviceAssignee")
+
+  @@map("users")
+}
+
+model Device {
+  id            String        @id @default(cuid())
+  brand         String
+  model         String
+  serialNumber  String        @unique
+  status        DeviceStatus  @default(PENDING)
+  price         Float?        @default(0)
+  ownerId       String
+  assigneeId    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  owner         User          @relation("DeviceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  assignee      User?         @relation("DeviceAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  logs          DeviceLog[]
+
+  @@map("devices")
+}
+
+model DeviceLog {
+  id        String   @id @default(cuid())
+  deviceId  String
+  message   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("device_logs")
+}
+
