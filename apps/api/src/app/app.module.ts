@@ -5,9 +5,16 @@ import { CustomersModule } from '../customers/customers.module';
 import { DevicesModule } from '../devices/devices.module';
 import { TicketsModule } from '../tickets/tickets.module';
 import { PartsModule } from '../parts/parts.module';
+import { TicketPartsModule } from '../ticket-parts/ticket-parts.module';
 
 @Module({
-  imports: [CustomersModule, DevicesModule, TicketsModule, PartsModule],
+  imports: [
+    CustomersModule,
+    DevicesModule,
+    TicketsModule,
+    PartsModule,
+    TicketPartsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -100,20 +100,39 @@ model Ticket {
 
   // Relations
   device            Device         @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  ticketParts       TicketPart[]
 
   @@map("tickets")
 }
 
 model Part {
-  id            String   @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String
-  sku           String?  @unique
-  stockQuantity Int      @default(0)
-  price         Float    @default(0)
-  cost          Float    @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  sku           String?      @unique
+  stockQuantity Int          @default(0)
+  price         Float        @default(0)
+  cost          Float        @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  ticketParts   TicketPart[]
 
   @@map("parts")
+}
+
+model TicketPart {
+  id        String   @id @default(cuid())
+  ticketId  String
+  partId    String
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  part      Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([ticketId, partId]) // Prevent duplicate part assignments to same ticket
+  @@map("ticket_parts")
 }
 
