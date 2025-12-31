@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { JwtPayload, UserWithoutPassword } from './interfaces/jwt-payload.interface';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -10,7 +11,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string) {
+  async validateUser(email: string, password: string): Promise<UserWithoutPassword> {
     // Find user by email (need to access Prisma directly to get password)
     const user = await this.usersService.findByEmailForAuth(email);
 
@@ -30,11 +31,12 @@ export class AuthService {
     return result;
   }
 
-  async login(user: any) {
-    // Create JWT payload
-    const payload = {
+  async login(user: UserWithoutPassword) {
+    // Create JWT payload (include role for RBAC)
+    const payload: JwtPayload = {
       email: user.email,
       sub: user.id,
+      role: user.role,
     };
 
     // Sign and return JWT token

@@ -3,7 +3,6 @@ import {
   IsOptional,
   IsNumber,
   IsEnum,
-  IsUUID,
   Min,
 } from 'class-validator';
 
@@ -33,8 +32,8 @@ export class CreateDeviceDto {
   @IsOptional()
   price?: number;
 
-  @IsUUID()
-  customerId!: string; // Links device to customer (owner)
+  @IsString()
+  customerId!: string; // Links device to customer (owner) - uses cuid format
 }
 
 export class UpdateDeviceDto {
@@ -59,8 +58,8 @@ export class UpdateDeviceDto {
   @IsOptional()
   price?: number;
 
-  @IsUUID()
+  @IsString()
   @IsOptional()
-  customerId?: string; // Optional: can transfer ownership
+  customerId?: string; // Optional: can transfer ownership - uses cuid format
 }
 

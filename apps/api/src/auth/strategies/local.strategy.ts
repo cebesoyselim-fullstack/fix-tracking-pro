@@ -1,7 +1,8 @@
 import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { UserWithoutPassword } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -12,12 +13,9 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(email: string, password: string): Promise<any> {
-    const user = await this.authService.validateUser(email, password);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    return user;
+  async validate(email: string, password: string): Promise<UserWithoutPassword> {
+    // validateUser already throws UnauthorizedException if credentials are invalid
+    return this.authService.validateUser(email, password);
   }
 }
 

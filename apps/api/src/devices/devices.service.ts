@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateDeviceDto, UpdateDeviceDto, DeviceStatus } from '@fix-tracking-pro/interfaces';
+import { CreateDeviceDto, UpdateDeviceDto, DeviceStatus, UserRole } from '@fix-tracking-pro/interfaces';
 
 @Injectable()
 export class DevicesService {
@@ -11,7 +11,7 @@ export class DevicesService {
     const customer = await this.prisma.user.findFirst({
       where: {
         id: createDeviceDto.customerId,
-        role: 'CUSTOMER',
+        role: UserRole.CUSTOMER,
       },
     });
 
@@ -37,7 +37,7 @@ export class DevicesService {
         brand: createDeviceDto.brand,
         model: createDeviceDto.model,
         serialNumber: createDeviceDto.serialNumber,
-        status: createDeviceDto.status || 'PENDING',
+        status: createDeviceDto.status || DeviceStatus.PENDING,
         price: createDeviceDto.price ?? 0,
         ownerId: createDeviceDto.customerId, // Link to customer
       },
@@ -132,7 +132,7 @@ export class DevicesService {
       const customer = await this.prisma.user.findFirst({
         where: {
           id: updateDeviceDto.customerId,
-          role: 'CUSTOMER',
+          role: UserRole.CUSTOMER,
         },
       });
 

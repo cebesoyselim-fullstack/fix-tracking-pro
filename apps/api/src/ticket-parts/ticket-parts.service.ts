@@ -5,6 +5,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketPartDto } from '@fix-tracking-pro/interfaces';
+import { Prisma } from '@prisma/client';
+
+type PrismaTransactionClient = Omit<
+  PrismaService,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
 
 @Injectable()
 export class TicketPartsService {
@@ -12,7 +18,7 @@ export class TicketPartsService {
 
   async create(createTicketPartDto: CreateTicketPartDto) {
     // Use Prisma transaction to ensure data integrity
-    return this.prisma.$transaction(async (tx: any) => {
+    return this.prisma.$transaction(async (tx: PrismaTransactionClient) => {
       // Step 1: Check if Ticket exists
       const ticket = await tx.ticket.findUnique({
         where: { id: createTicketPartDto.ticketId },
@@ -35,25 +41,7 @@ export class TicketPartsService {
         );
       }
 
-      // Check if sufficient stock is available
-      if (part.stockQuantity < createTicketPartDto.quantity) {
-        throw new BadRequestException(
-          `Insufficient stock. Available: ${part.stockQuantity}, Requested: ${createTicketPartDto.quantity}`,
-        );
-      }
-
-      // Step 3: Decrement the stockQuantity of the Part
-      await tx.part.update({
-        where: { id: createTicketPartDto.partId },
-        data: {
-          stockQuantity: {
-            decrement: createTicketPartDto.quantity,
-          },
-        },
-      });
-
-      // Step 4: Create the TicketPart record linking Ticket and Part
-      // Check if this part is already assigned to this ticket
+      // Step 4: Check if this part is already assigned to this ticket
       const existingTicketPart = await tx.ticketPart.findUnique({
         where: {
           ticketId_partId: {
@@ -64,7 +52,25 @@ export class TicketPartsService {
       });
 
       if (existingTicketPart) {
-        // If already exists, update the quantity instead
+        // If already exists, we need to check if there's enough stock for the additional quantity
+        // The current stock already accounts for the existing ticketPart.quantity
+        // So we need: currentStock >= newQuantity (not existingQuantity + newQuantity)
+        if (part.stockQuantity < createTicketPartDto.quantity) {
+          throw new BadRequestException(
+            `Insufficient stock. Available: ${part.stockQuantity}, Requested: ${createTicketPartDto.quantity}`,
+          );
+        }
+
+        // Decrement stock for the additional quantity
+        await tx.part.update({
+          where: { id: createTicketPartDto.partId },
+          data: {
+            stockQuantity: {
+              decrement: createTicketPartDto.quantity,
+            },
+          },
+        });
+
         return tx.ticketPart.update({
           where: { id: existingTicketPart.id },
           data: {
@@ -90,6 +96,23 @@ export class TicketPartsService {
           },
         });
       }
+
+      // Step 5: Check if sufficient stock is available for new TicketPart
+      if (part.stockQuantity < createTicketPartDto.quantity) {
+        throw new BadRequestException(
+          `Insufficient stock. Available: ${part.stockQuantity}, Requested: ${createTicketPartDto.quantity}`,
+        );
+      }
+
+      // Step 6: Decrement the stockQuantity of the Part
+      await tx.part.update({
+        where: { id: createTicketPartDto.partId },
+        data: {
+          stockQuantity: {
+            decrement: createTicketPartDto.quantity,
+          },
+        },
+      });
 
       // Create new TicketPart record
       return tx.ticketPart.create({
@@ -216,7 +239,7 @@ export class TicketPartsService {
     }
 
     // Use transaction to restore stock when removing TicketPart
-    return this.prisma.$transaction(async (tx: any) => {
+    return this.prisma.$transaction(async (tx: PrismaTransactionClient) => {
       // Restore the stock quantity
       await tx.part.update({
         where: { id: ticketPart.partId },

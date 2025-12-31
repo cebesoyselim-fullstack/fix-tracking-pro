@@ -3,7 +3,6 @@ import {
   IsOptional,
   IsNumber,
   IsEnum,
-  IsUUID,
   IsDateString,
   Min,
 } from 'class-validator';
@@ -24,8 +23,8 @@ export enum TicketPriority {
 }
 
 export class CreateTicketDto {
-  @IsUUID()
-  deviceId!: string; // Links ticket to device
+  @IsString()
+  deviceId!: string; // Links ticket to device - uses cuid format
 
   @IsString()
   issueDescription!: string;
@@ -49,9 +48,9 @@ export class CreateTicketDto {
 }
 
 export class UpdateTicketDto {
-  @IsUUID()
+  @IsString()
   @IsOptional()
-  deviceId?: string; // Can transfer to different device
+  deviceId?: string; // Can transfer to different device - uses cuid format
 
   @IsString()
   @IsOptional()

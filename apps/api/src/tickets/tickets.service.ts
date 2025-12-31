@@ -45,8 +45,8 @@ export class TicketsService {
       data: {
         deviceId: createTicketDto.deviceId,
         issueDescription: createTicketDto.issueDescription,
-        status: createTicketDto.status || 'OPEN',
-        priority: createTicketDto.priority || 'MEDIUM',
+        status: createTicketDto.status || TicketStatus.OPEN,
+        priority: createTicketDto.priority || TicketPriority.MEDIUM,
         estimatedCost: createTicketDto.estimatedCost,
         dueDate: dueDate,
       },

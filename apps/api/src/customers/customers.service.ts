@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateCustomerDto, UpdateCustomerDto } from '@fix-tracking-pro/interfaces';
+import { CreateCustomerDto, UpdateCustomerDto, UserRole } from '@fix-tracking-pro/interfaces';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -8,6 +8,17 @@ export class CustomersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createCustomerDto: CreateCustomerDto) {
+    // Check if user with email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createCustomerDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException(
+        `User with email ${createCustomerDto.email} already exists`,
+      );
+    }
+
     // Hash password before storing
     const hashedPassword = await bcrypt.hash(createCustomerDto.password, 10);
 
@@ -15,7 +26,7 @@ export class CustomersService {
       data: {
         email: createCustomerDto.email,
         password: hashedPassword,
-        role: 'CUSTOMER',
+        role: UserRole.CUSTOMER,
       },
       // Exclude password from response
       select: {
@@ -31,7 +42,7 @@ export class CustomersService {
   async findAll() {
     return this.prisma.user.findMany({
       where: {
-        role: 'CUSTOMER',
+        role: UserRole.CUSTOMER,
       },
       select: {
         id: true,
@@ -47,7 +58,7 @@ export class CustomersService {
     const customer = await this.prisma.user.findFirst({
       where: {
         id,
-        role: 'CUSTOMER',
+        role: UserRole.CUSTOMER,
       },
       select: {
         id: true,
@@ -68,6 +79,19 @@ export class CustomersService {
   async update(id: string, updateCustomerDto: UpdateCustomerDto) {
     // Check if customer exists
     await this.findOne(id);
+
+    // If email is being updated, check for duplicates
+    if (updateCustomerDto.email) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: updateCustomerDto.email },
+      });
+
+      if (existingUser && existingUser.id !== id) {
+        throw new ConflictException(
+          `User with email ${updateCustomerDto.email} already exists`,
+        );
+      }
+    }
 
     const updateData: { email?: string; password?: string } = {};
 
