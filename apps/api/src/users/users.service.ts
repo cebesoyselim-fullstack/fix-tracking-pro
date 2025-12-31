@@ -85,5 +85,22 @@ export class UsersService {
 
     return user;
   }
+
+  // Internal method for authentication (includes password)
+  async findByEmailForAuth(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      // Include password for validation
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
 }
 

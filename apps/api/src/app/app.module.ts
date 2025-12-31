@@ -7,6 +7,7 @@ import { TicketsModule } from '../tickets/tickets.module';
 import { PartsModule } from '../parts/parts.module';
 import { TicketPartsModule } from '../ticket-parts/ticket-parts.module';
 import { UsersModule } from '../users/users.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UsersModule } from '../users/users.module';
     PartsModule,
     TicketPartsModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
