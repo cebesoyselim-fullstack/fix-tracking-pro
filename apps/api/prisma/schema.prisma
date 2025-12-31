@@ -104,3 +104,16 @@ model Ticket {
   @@map("tickets")
 }
 
+model Part {
+  id            String   @id @default(cuid())
+  name          String
+  sku           String?  @unique
+  stockQuantity Int      @default(0)
+  price         Float    @default(0)
+  cost          Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("parts")
+}
+
